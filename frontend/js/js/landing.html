@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow — Gérez vos tâches</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a26;
+      --accent: #6c63ff;
+      --accent2: #ff6584;
+      --accent3: #43e97b;
+      --text: #e8e8f0;
+      --muted: #6b6b8a;
+      --border: rgba(108,99,255,0.18);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.2rem 3rem;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(10,10,15,0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.04em;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .btn-nav {
+      background: var(--accent);
+      color: #fff !important;
+      padding: 0.5rem 1.4rem;
+      border-radius: 50px;
+      font-weight: 600;
+      transition: opacity 0.2s, transform 0.2s !important;
+    }
+    .btn-nav:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+      position: relative;
+    }
+    .hero-glow {
+      position: absolute;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(108,99,255,0.18) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(108,99,255,0.12);
+      border: 1px solid rgba(108,99,255,0.3);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 800;
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+    .hero h1 .line2 {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.7;
+      font-weight: 300;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+    .hero-cta {
+      display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+      animation: fadeUp 0.7s 0.3s ease both;
+    }
+    .btn-primary-hero {
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      color: #fff;
+      border: none;
+      padding: 0.9rem 2.2rem;
+      border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 30px rgba(108,99,255,0.35);
+      text-decoration: none;
+    }
+    .btn-primary-hero:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 50px rgba(108,99,255,0.5);
+      color: #fff;
+    }
+    .btn-secondary-hero {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.9rem 2.2rem;
+      border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      text-decoration: none;
+    }
+    .btn-secondary-hero:hover {
+      border-color: var(--accent);
+      background: rgba(108,99,255,0.08);
+      color: var(--text);
+    }
+
+    /* ── FLOATING PREVIEW ── */
+    .hero-preview {
+      margin-top: 5rem;
+      animation: fadeUp 0.8s 0.5s ease both;
+    }
+    .preview-frame {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      max-width: 860px;
+      margin: 0 auto;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(108,99,255,0.1);
+      position: relative;
+    }
+    .preview-topbar {
+      display: flex; gap: 0.5rem; margin-bottom: 1.2rem;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .preview-content {
+      display: grid; grid-template-columns: 200px 1fr; gap: 1rem; min-height: 280px;
+    }
+    .preview-sidebar {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+    .preview-sidebar-item {
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .preview-sidebar-item.active {
+      background: rgba(108,99,255,0.15);
+      color: var(--accent);
+    }
+    .preview-main { padding: 0.5rem; }
+    .preview-tasks { display: flex; flex-direction: column; gap: 0.6rem; }
+    .preview-task {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      display: flex; align-items: center; gap: 0.8rem;
+      font-size: 0.8rem;
+      color: var(--text);
+      border-left: 3px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .preview-task.t1 { border-color: var(--accent); }
+    .preview-task.t2 { border-color: var(--accent3); }
+    .preview-task.t3 { border-color: var(--accent2); }
+    .task-check {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid var(--muted);
+      flex-shrink: 0;
+    }
+    .task-check.done {
+      background: var(--accent3);
+      border-color: var(--accent3);
+    }
+    .task-tag {
+      margin-left: auto;
+      font-size: 0.68rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 50px;
+      font-weight: 600;
+    }
+    .tag-purple { background: rgba(108,99,255,0.15); color: var(--accent); }
+    .tag-green { background: rgba(67,233,123,0.12); color: var(--accent3); }
+    .tag-pink { background: rgba(255,101,132,0.12); color: var(--accent2); }
+
+    /* ── FEATURES ── */
+    .section { padding: 7rem 2rem; position: relative; }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .section-sub {
+      text-align: center;
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 480px;
+      margin: 0 auto 4rem;
+      line-height: 1.7;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(108,99,255,0.35);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon {
+      width: 50px; height: 50px;
+      background: rgba(108,99,255,0.12);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      color: var(--accent);
+      margin-bottom: 1.2rem;
+    }
+    .feature-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    .feature-card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+
+    /* ── STATS ── */
+    .stats-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 4rem 2rem;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+    }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      padding: 7rem 2rem;
+      text-align: center;
+    }
+    .cta-box {
+      max-width: 650px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(255,101,132,0.08));
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 4rem 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(108,99,255,0.2), transparent 70%);
+      top: -100px; right: -100px;
+      pointer-events: none;
+    }
+    .cta-box h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+    }
+    .cta-box p {
+      color: var(--muted);
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 3rem;
+      display: flex; align-items: center; justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .preview-content { grid-template-columns: 1fr; }
+      .preview-sidebar { display: none; }
+      .stats-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="#" class="nav-logo">Task<span>Flow</span></a>
+  <div class="nav-links">
+    <a href="#features">Fonctionnalités</a>
+    <a href="#stats">Statistiques</a>
+    <a href="login.html" class="btn-nav">Connexion</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div style="position:relative; z-index:1;">
+    <div class="hero-badge">
+      <i class="fa fa-bolt"></i> Productivité Redéfinie
+    </div>
+    <h1>
+      Organisez.<br>
+      <span class="line2">Accomplissez.</span>
+    </h1>
+    <p>TaskFlow transforme le chaos de vos projets en flux de travail clairs, collaboratifs et efficaces.</p>
+    <div class="hero-cta">
+      <a href="login.html" class="btn-primary-hero">
+        <i class="fa fa-rocket me-2"></i>Commencer gratuitement
+      </a>
+      <a href="#features" class="btn-secondary-hero">
+        Découvrir <i class="fa fa-arrow-down ms-2"></i>
+      </a>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="hero-preview">
+      <div class="preview-frame">
+        <div class="preview-topbar">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+        </div>
+        <div class="preview-content">
+          <div class="preview-sidebar">
+            <div class="preview-sidebar-item active"><i class="fa fa-home fa-xs"></i> Dashboard</div>
+            <div class="preview-sidebar-item"><i class="fa fa-tasks fa-xs"></i> Mes tâches</div>
+            <div class="preview-sidebar-item"><i class="fa fa-users fa-xs"></i> Équipe</div>
+            <div class="preview-sidebar-item"><i class="fa fa-chart-bar fa-xs"></i> Rapports</div>
+            <div class="preview-sidebar-item"><i class="fa fa-cog fa-xs"></i> Paramètres</div>
+          </div>
+          <div class="preview-main">
+            <div class="preview-tasks">
+              <div class="preview-task t1">
+                <div class="task-check done"></div>
+                <span>Configurer l'authentification JWT</span>
+                <span class="task-tag tag-purple">Backend</span>
+              </div>
+              <div class="preview-task t2">
+                <div class="task-check done"></div>
+                <span>Créer les routes utilisateurs</span>
+                <span class="task-tag tag-green">Terminé</span>
+              </div>
+              <div class="preview-task t3">
+                <div class="task-check"></div>
+                <span>Intégrer le dashboard frontend</span>
+                <span class="task-tag tag-pink">En cours</span>
+              </div>
+              <div class="preview-task t1">
+                <div class="task-check"></div>
+                <span>Tests unitaires API</span>
+                <span class="task-tag tag-purple">Backend</span>
+              </div>
+              <div class="preview-task t2">
+                <div class="task-check"></div>
+                <span>Déploiement Docker</span>
+                <span class="task-tag tag-green">DevOps</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label">Fonctionnalités</div>
+  <h2 class="section-title">Tout ce dont vous avez besoin</h2>
+  <p class="section-sub">Un outil pensé pour les développeurs et équipes qui veulent aller vite sans perdre le fil.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fa fa-layer-group"></i></div>
+      <h3>Projets structurés</h3>
+      <p>Organisez vos tâches en projets, sprints et jalons. Visualisez l'avancement en temps réel.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(255,101,132,0.12); color:var(--accent2);"><i class="fa fa-shield-halved"></i></div>
+      <h3>Auth sécurisée JWT</h3>
+      <p>Système d'authentification robuste avec tokens JWT, refresh tokens et gestion des rôles.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(67,233,123,0.12); color:var(--accent3);"><i class="fa fa-users"></i></div>
+      <h3>Travail collaboratif</h3>
+      <p>Assignez des tâches, laissez des commentaires et suivez l'activité de toute l'équipe.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon"><i class="fa fa-chart-line"></i></div>
+      <h3>Tableaux de bord</h3>
+      <p>Des métriques claires : tâches complétées, vélocité de l'équipe, délais respectés.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(255,101,132,0.12); color:var(--accent2);"><i class="fa fa-docker fab"></i></div>
+      <h3>Docker Ready</h3>
+      <p>Déployez en un seul `docker-compose up`. Stack Node.js + MongoDB préconfiguré.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(67,233,123,0.12); color:var(--accent3);"><i class="fa fa-bolt"></i></div>
+      <h3>API REST rapide</h3>
+      <p>Une API Express bien documentée, prête à être consommée par n'importe quel client.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-section" id="stats">
+  <div class="stats-grid">
+    <div>
+      <div class="stat-num">12k+</div>
+      <div class="stat-label">Utilisateurs actifs</div>
+    </div>
+    <div>
+      <div class="stat-num">98%</div>
+      <div class="stat-label">Uptime garanti</div>
+    </div>
+    <div>
+      <div class="stat-num">3M+</div>
+      <div class="stat-label">Tâches gérées</div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-box">
+    <h2>Prêt à commencer ?</h2>
+    <p>Rejoignez des milliers d'équipes qui font confiance à TaskFlow pour organiser leur travail quotidien.</p>
+    <a href="login.html" class="btn-primary-hero">
+      Créer mon compte <i class="fa fa-arrow-right ms-2"></i>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div><a href="#" class="nav-logo" style="font-size:1.1rem;">Task<span style="color:var(--accent);">Flow</span></a></div>
+  <div style="display:flex; gap:1.5rem;">
+    <a href="#">GitHub</a>
+    <a href="#">API Docs</a>
+    <a href="#">Support</a>
+  </div>
+  <div>© 2025 TaskFlow. Tous droits réservés.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Si déjà connecté → dashboard direct
+  if (localStorage.getItem('token')) {
+    window.location.replace('dashboard.html');
+  }
+</script>
+</body>
+</html>
