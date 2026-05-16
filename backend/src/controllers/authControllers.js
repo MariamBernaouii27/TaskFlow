@@ -1,67 +1,63 @@
-const User = require('../models/auth'); // Import du modèle qu'on vient de créer
+const User = require('../models/auth');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
-// Fonction pour générer le token JWT (valable 24h par exemple)
-const generateToken = (userId) => {
-    // Le JWT_SECRET doit obligatoirement être dans ton fichier .env !
-    return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-        expiresIn: '24h',
-    });
-};
-
-// 1. INSCRIPTION (Register)
+// REGISTER
 exports.register = async (req, res) => {
     try {
         const { fullName, email, password } = req.body;
 
-        // Vérifier si l'utilisateur existe déjà
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-            return res.status(400).json({ message: "Cet email est déjà utilisé" });
+        // Check ila email mawjod
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email déjà utilisé' });
         }
 
-        // Créer l'utilisateur (le mot de passe sera haché automatiquement grâce au pre('save') !)
-        const user = await User.create({ fullName, email, password });
+        // Créer user (password ghadi yit7ash automatiquement f model)
+        const user = new User({ fullName, email, password });
+        await user.save();
 
-        // Générer le token JWT pour le connecter directement
-        const token = generateToken(user._id);
+        res.status(201).json({ message: 'Compte créé avec succès' });
 
-        res.status(201).json({
-            message: "Utilisateur créé avec succès",
-            token,
-            user: { id: user._id, fullName: user.fullName, email: user.email }
-        });
     } catch (error) {
-        res.status(500).json({ message: "Erreur serveur lors de l'inscription", error: error.message });
+        res.status(500).json({ message: 'Erreur serveur', error: error.message });
     }
 };
 
-// 2. CONNEXION (Login)
+// LOGIN
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Chercher l'utilisateur par son email
+        // Check ila user mawjod
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: "Identifiants invalides" });
+            return res.status(400).json({ message: 'Email ou mot de passe incorrect' });
         }
 
-        // Vérifier si le mot de passe est correct (via la méthode comparePassword du modèle)
-        const isMatch = await user.comparePassword(password);
+        // Check password
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({ message: "Identifiants invalides" });
+            return res.status(400).json({ message: 'Email ou mot de passe incorrect' });
         }
 
-        // Générer le token JWT
-        const token = generateToken(user._id);
+        // Générer JWT token
+        const token = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
 
-        res.status(200).json({
-            message: "Connexion réussie",
+        res.json({
             token,
-            user: { id: user._id, fullName: user.fullName, email: user.email }
+            user: {
+                id: user._id,
+                fullName: user.fullName,
+                email: user.email
+            }
         });
+
     } catch (error) {
-        res.status(500).json({ message: "Erreur serveur lors de la connexion", error: error.message });
+        res.status(500).json({ message: 'Erreur serveur', error: error.message });
     }
 };
