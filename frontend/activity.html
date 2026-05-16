@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Historique</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #0a0a14; color: #e0e0ff; padding: 24px; }
+    h2 { margin-bottom: 20px; }
+    .item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #2a2a4a; }
+    .icon { width: 36px; height: 36px; border-radius: 50%; background: #1e1e3a; display: flex; align-items: center; justify-content: center; }
+    .msg { color: #c7c7f0; font-size: 14px; }
+    .time { color: #4a4a70; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h2>🕐 Fil d'activité</h2>
+  <div id="activity-list">Chargement...</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    const ICONS = {
+      task_created: "✦", task_deleted: "✕",
+      task_status_changed: "⟳", member_added: "＋",
+      member_removed: "−", project_updated: "✎"
+    };
+
+    function timeAgo(date) {
+      const diff = Math.floor((Date.now() - new Date(date)) / 1000);
+      if (diff < 60) return "à l'instant";
+      if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min`;
+      if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
+      return `il y a ${Math.floor(diff / 86400)} j`;
+    }
+
+    function getLabel(a) {
+      const u = a.user?.name || "Quelqu'un";
+      switch (a.type) {
+        case "task_created": return `${u} a créé « ${a.meta?.taskTitle} »`;
+        case "task_deleted": return `${u} a supprimé « ${a.meta?.taskTitle} »`;
+        case "task_status_changed": return `${u} : ${a.meta?.from} → ${a.meta?.to}`;
+        case "member_added": return `${u} a ajouté ${a.meta?.memberName}`;
+        case "member_removed": return `${u} a retiré ${a.meta?.memberName}`;
+        case "project_updated": return `${u} a modifié le projet`;
+        default: return "Action inconnue";
+      }
+    }
+
+    async function loadActivities() {
+      const token = localStorage.getItem("token");
+      const projectId = localStorage.getItem("currentProjectId");
+      try {
+        const res = await axios.get(
+          `http://localhost:3000/api/projects/${projectId}/activities`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        document.getElementById("activity-list").innerHTML =
+          res.data.data.map(a => `
+            <div class="item">
+              <div class="icon">${ICONS[a.type] || "•"}</div>
+              <div>
+                <p class="msg">${getLabel(a)}</p>
+                <span class="time">${timeAgo(a.createdAt)}</span>
+              </div>
+            </div>
+          `).join("");
+      } catch (err) {
+        document.getElementById("activity-list").innerHTML = "Erreur de chargement";
+      }
+    }
+
+    loadActivities();
+  </script>
+</body>
+</html>
