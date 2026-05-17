@@ -1,21 +1,19 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
-    try {
-        // Jib token mn header
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ message: 'Token manquant' });
-        }
+  const authHeader = req.headers.authorization;
 
-        const token = authHeader.split(' ')[1];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Token manquant' });
+  }
 
-        // Vérifier token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
-        next();
+  const token = authHeader.split(' ')[1];
 
-    } catch (error) {
-        res.status(401).json({ message: 'Token invalide ou expiré' });
-    }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Token invalide' });
+  }
 };
