@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow Pro</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #020617;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #bg-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    #scanlines {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.06) 3px,
+        rgba(0,0,0,0.06) 4px
+      );
+    }
+
+    #app {
+      width: 90%;
+      max-width: 550px;
+      padding: 40px 0;
+      z-index: 2;
+      position: relative;
+    }
+
+    h1 {
+      text-align: center;
+      color: #22d3ee;
+      font-size: 3rem;
+      text-shadow:
+        0 0 10px rgba(34,211,238,0.9),
+        0 0 30px rgba(34,211,238,0.6),
+        0 0 70px rgba(34,211,238,0.3);
+      animation: flicker 7s infinite;
+    }
+
+    @keyframes flicker {
+      0%,89%,100% { opacity: 1; }
+      90% { opacity: 0.7; }
+      91% { opacity: 1; }
+      92% { opacity: 0.5; }
+      93% { opacity: 1; }
+    }
+
+    .section {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      padding: 25px;
+      border-radius: 16px;
+      border: 1px solid rgba(34,211,238,0.15);
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #22d3ee, transparent);
+      opacity: 0.6;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      background: rgba(15,23,42,0.8);
+      color: white;
+      display: block;
+      box-sizing: border-box;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      font-family: sans-serif;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: #22d3ee;
+      box-shadow: 0 0 0 2px rgba(34,211,238,0.1), 0 0 15px rgba(34,211,238,0.08);
+    }
+
+    select option { background: #0f172a; }
+
+    button#submitBtn {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      color: #22d3ee;
+      border: 1px solid #22d3ee;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.3s, box-shadow 0.3s;
+    }
+
+    button#submitBtn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: #22d3ee;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 0;
+    }
+
+    button#submitBtn:hover {
+      color: #020617;
+      box-shadow: 0 0 25px rgba(34,211,238,0.5);
+    }
+    button#submitBtn:hover::before { transform: translateY(0); }
+    button#submitBtn span { position: relative; z-index: 1; }
+
+    #cancelBtn {
+      display: none;
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: border-color 0.2s;
+    }
+    #cancelBtn:hover { border-color: #64748b; }
+
+    .filter-group { margin-bottom: 12px; }
+    .filter-label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { border-color: #22d3ee; color: #22d3ee; }
+    .filter-btn.active {
+      background: rgba(34,211,238,0.1);
+      color: #22d3ee;
+      border-color: #22d3ee;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(34,211,238,0.15);
+    }
+
+    .task-item {
+      background: rgba(15,23,42,0.6);
+      border-radius: 12px;
+      border: 1px solid rgba(34,211,238,0.08);
+      border-left: 3px solid #22d3ee;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .task-item:hover {
+      border-color: rgba(34,211,238,0.4);
+      box-shadow: 0 0 20px rgba(34,211,238,0.07);
+      transform: translateX(3px);
+    }
+
+    .task-info { flex: 1; }
+    .task-info.completed strong { text-decoration: line-through; color: #64748b; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      margin-top: 4px;
+    }
+    .status-completed   { background: #064e3b; color: #34d399; }
+    .status-in-progress { background: #1e3a5f; color: #60a5fa; }
+
+    .priority-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 0.72rem;
+      margin-left: 6px;
+    }
+    .priority-low    { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .priority-medium { background: #2d1f00; color: #fbbf24; }
+    .priority-high   { background: #2d0a0a; color: #f87171; }
+
+    .actions { display: flex; flex-direction: column; gap: 5px; }
+    .actions button {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: white;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .page-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: transparent;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .page-btn:disabled { opacity: 0.3; cursor: default; }
+    .page-btn:not(:disabled):hover { border-color: #22d3ee; color: #22d3ee; }
+    .page-info { color: #94a3b8; font-size: 0.85rem; }
+
+    .results-count {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+
+    .message {
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: none;
+      font-size: 0.9rem;
+    }
+    .message.success { background: #064e3b; color: #34d399; }
+    .message.error   { background: #2d0a0a; color: #f87171; }
+  </style>
+</head>
+<body>
+
+  <canvas id="bg-canvas"></canvas>
+  <div id="scanlines"></div>
+
+  <div id="app">
+    <h1>TaskFlow</h1>
+
+    <div class="section">
+      <h2 id="formTitle">Add a Task</h2>
+      <div id="validationMessage" class="message"></div>
+      <form id="taskForm">
+        <input type="hidden" id="taskId">
+        <input type="text" id="title" placeholder="Task Title">
+        <textarea id="description" placeholder="Description" rows="3"></textarea>
+        <select id="priority">
+          <option value="low">Low Priority</option>
+          <option value="medium" selected>Medium Priority</option>
+          <option value="high">High Priority</option>
+        </select>
+        <button type="submit" id="submitBtn"><span>Add Task</span></button>
+        <button type="button" id="cancelBtn">Cancel</button>
+      </form>
+    </div>
+
+    <div class="section">
+      <h2>Task List</h2>
+
+      <input type="text" id="searchInput" placeholder="🔍 Search by title or description…">
+
+      <div class="filter-group">
+        <div class="filter-label">Status</div>
+        <div class="filter-tabs" id="statusFilters">
+          <button class="filter-btn active" data-status="all">All</button>
+          <button class="filter-btn" data-status="in progress">In Progress</button>
+          <button class="filter-btn" data-status="completed">Completed</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Priority</div>
+        <div class="filter-tabs" id="priorityFilters">
+          <button class="filter-btn active" data-priority="all">All</button>
+          <button class="filter-btn" data-priority="low">Low</button>
+          <button class="filter-btn" data-priority="medium">Medium</button>
+          <button class="filter-btn" data-priority="high">High</button>
+        </div>
+      </div>
+
+      <div class="results-count" id="resultsCount"></div>
+      <div id="taskList"></div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    const renderer = new THREE.WebGLRenderer({
+      canvas: document.getElementById('bg-canvas'),
+      antialias: true,
+      alpha: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 300);
+    camera.position.z = 35;
+
+    const makeParticles = (count, color, size, opacity, spread) => {
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      for (let i = 0; i < count * 3; i++) pos[i] = (Math.random() - 0.5) * spread;
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      return new THREE.Points(geo, new THREE.PointsMaterial({ color, size, transparent: true, opacity }));
+    };
+
+    scene.add(makeParticles(1200, 0x22d3ee, 0.08, 0.5, 150));
+    scene.add(makeParticles(300,  0x4f46e5, 0.1,  0.3, 120));
+
+    const meshes = [];
+    const matCyan   = new THREE.MeshBasicMaterial({ color: 0x22d3ee, wireframe: true, transparent: true, opacity: 0.08 });
+    const matPurple = new THREE.MeshBasicMaterial({ color: 0x4f46e5, wireframe: true, transparent: true, opacity: 0.07 });
+
+    [
+      [new THREE.IcosahedronGeometry(5, 0), matCyan],
+      [new THREE.OctahedronGeometry(4, 0),  matPurple],
+      [new THREE.TetrahedronGeometry(3.5,0), matCyan],
+      [new THREE.IcosahedronGeometry(2.5,0), matPurple],
+      [new THREE.OctahedronGeometry(6, 0),  matCyan],
+      [new THREE.TetrahedronGeometry(2, 0), matPurple],
+    ].forEach(([geo, mat]) => {
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(
+        (Math.random()-0.5)*60,
+        (Math.random()-0.5)*35,
+        (Math.random()-0.5)*25 - 8
+      );
+      mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+      meshes.push({ mesh, sx: 0.002+Math.random()*0.004, sy: 0.001+Math.random()*0.003 });
+      scene.add(mesh);
+    });
+
+    const grid = new THREE.Mesh(
+      new THREE.PlaneGeometry(120, 120, 24, 24),
+      new THREE.MeshBasicMaterial({ color: 0x22d3ee, wireframe: true, transparent: true, opacity: 0.04 })
+    );
+    grid.rotation.x = -Math.PI / 2.8;
+    grid.position.y = -16;
+    scene.add(grid);
+
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', e => {
+      mouseX = (e.clientX / window.innerWidth  - 0.5) * 2;
+      mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    let t = 0;
+    (function animate() {
+      requestAnimationFrame(animate);
+      t += 0.005;
+      meshes.forEach(({ mesh, sx, sy }) => {
+        mesh.rotation.x += sx;
+        mesh.rotation.y += sy;
+        mesh.position.y += Math.sin(t + mesh.position.x * 0.1) * 0.006;
+      });
+      camera.position.x += (mouseX * 4 - camera.position.x) * 0.025;
+      camera.position.y += (-mouseY * 2.5 - camera.position.y) * 0.025;
+      camera.lookAt(scene.position);
+      grid.position.z = (t * 3) % 5 - 2;
+      renderer.render(scene, camera);
+    })();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+
+  <script src="app.js"></script>
+</body>
+</html>
