@@ -1,11 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const Activity = require("../models/Activity");
-
-/**
- * GET /api/projects/:id/activities
- * ترجع activities ديال project مرتبة من الأحدث للأقدم
- */
 router.get("/:id/activities", async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
