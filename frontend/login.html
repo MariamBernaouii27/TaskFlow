@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion - TaskFlow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body class="auth-wrapper">
+  <div class="container">
+    <div class="auth-card mx-auto">
+      <div class="card p-4">
+        <div class="text-center mb-4">
+          <h2 class="fw-bold text-primary">
+            <i class="fas fa-tasks me-2"></i>TaskFlow
+          </h2>
+          <p class="text-muted">Connectez-vous à votre compte</p>
+        </div>
+
+        <div id="alert" class="alert d-none"></div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Email</label>
+          <input type="email" id="email" class="form-control form-control-lg"
+                 placeholder="votre@email.com">
+        </div>
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Mot de passe</label>
+          <input type="password" id="password" class="form-control form-control-lg"
+                 placeholder="••••••••">
+        </div>
+        <button id="loginBtn" class="btn btn-primary btn-lg w-100 fw-bold">
+          <i class="fas fa-sign-in-alt me-2"></i>Se connecter
+        </button>
+
+        <hr class="my-4">
+        <p class="text-center text-muted mb-0">
+          Pas encore de compte ?
+          <a href="register.html" class="text-primary fw-semibold">S'inscrire</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    if (localStorage.getItem('token')) {
+      window.location.href = 'dashboard.html';
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const alert = document.getElementById('alert');
+      const btn = document.getElementById('loginBtn');
+
+      if (!email || !password) {
+        showAlert('alert', 'Veuillez remplir tous les champs', 'danger');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Connexion...';
+
+      try {
+        const res = await axios.post('/api/auth/register', { email, password });
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        const msg = err.response?.data?.message || 'Erreur de connexion';
+        showAlert('alert', msg, 'danger');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Se connecter';
+      }
+    });
+  </script>
+</body>
+</html>

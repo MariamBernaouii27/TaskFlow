@@ -1,0 +1,46 @@
+/* Variables communes Bootstrap + custom */
+:root {
+  --tf-primary: #0d6efd;
+  --tf-dark: #212529;
+  --tf-card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f8f9fa;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: var(--tf-card-shadow);
+}
+
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.alert {
+  border-radius: 8px;
+  border: none;
+}
+
+/* Auth pages */
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+}
