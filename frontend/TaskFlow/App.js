@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 taskForm.addEventListener('input', () => {
-  if (taskIdInput.value !== '') return; // don't draft during edit
+  if (taskIdInput.value !== '') return; 
 
   const taskData = {
     title:       titleInput.value,
@@ -55,7 +55,7 @@ taskForm.addEventListener('input', () => {
 
 searchInput.addEventListener('input', () => {
   currentSearch = searchInput.value.trim().toLowerCase();
-  currentPage   = 1; // reset to first page on new search
+  currentPage   = 1;
   renderTasks();
 });
 
