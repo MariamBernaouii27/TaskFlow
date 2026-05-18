@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow — Membres du projet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    :root {
+      --bg:       #0a0a0f;
+      --surface:  #986b9a;
+      --surface2: #51516c;
+      --border:   rgba(255,255,255,0.07);
+      --accent:   #5b6ef5;
+      --danger:   #f87382;
+      --success:  #5bf5a3;
+      --warn:     #f5e05b;
+      --text:     #e8e8f0;
+      --muted:    #6b6b80;
+      --radius:   14px;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* BG glow */
+    body::before {
+      content:'';
+      position:fixed; top:-200px; left:-200px;
+      width:600px; height:600px;
+      background: radial-gradient(circle, rgba(91,110,245,0.1) 0%, transparent 70%);
+      pointer-events:none; z-members:0;
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      position:sticky; top:0; z-members:100;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 2.5rem; height:64px;
+      background:rgba(10,10,15,0.85);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+    }
+    .nav-logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.3rem; }
+    .nav-logo span { color:var(--accent); }
+    .nav-right { display:flex; align-items:center; gap:1rem; }
+    .nav-user { font-size:0.85rem; color:var(--muted); }
+    .btn-logout {
+      font-size:0.8rem; padding:6px 14px;
+      border-radius:8px; border:1px solid var(--border);
+      background:transparent; color:var(--muted); cursor:pointer;
+      transition:all 0.2s;
+    }
+    .btn-logout:hover { border-color:var(--danger); color:var(--danger); }
+
+    /* ── PAGE ── */
+    .page {
+      position:relative; z-members:1;
+      max-width:860px; margin:0 auto;
+      padding:3rem 2rem;
+    }
+
+    /* ── HEADER ── */
+    .page-header {
+      margin-bottom:2.5rem;
+      animation: fadeUp 0.5s ease both;
+    }
+    .back-link {
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:0.82rem; color:var(--muted);
+      text-decoration:none; margin-bottom:1rem;
+      transition:color 0.2s;
+    }
+    .back-link:hover { color:var(--accent); }
+    .page-title {
+      font-family:'Syne',sans-serif;
+      font-size:2rem; font-weight:800;
+      letter-spacing:-0.03em;
+    }
+    .page-title span { color:var(--accent); }
+    .project-name {
+      font-size:0.9rem; color:var(--muted);
+      margin-top:4px;
+    }
+
+    /* ── INVITE FORM ── */
+    .invite-box {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:1.5rem;
+      margin-bottom:2rem;
+      animation: fadeUp 0.5s ease 0.1s both;
+    }
+    .invite-title {
+      font-family:'Syne',sans-serif;
+      font-size:1rem; font-weight:700;
+      margin-bottom:1rem;
+      display:flex; align-items:center; gap:8px;
+    }
+    .invite-row {
+      display:flex; gap:0.75rem;
+    }
+    .form-control {
+      flex:1;
+      padding:10px 14px;
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:10px;
+      color:var(--text);
+      font-family:'DM Sans',sans-serif;
+      font-size:0.9rem;
+      outline:none;
+      transition:border-color 0.2s;
+    }
+    .form-control:focus { border-color:var(--accent); }
+    .form-control::placeholder { color:var(--muted); }
+    .btn-primary {
+      font-family:'Syne',sans-serif;
+      font-size:0.88rem; font-weight:600;
+      padding:10px 22px;
+      border-radius:10px; border:none;
+      background:var(--accent); color:#fff;
+      cursor:pointer; transition:all 0.2s;
+      white-space:nowrap;
+    }
+    .btn-primary:hover { background:#6f81f7; transform:translateY(-1px); box-shadow:0 6px 24px rgba(91,110,245,0.35); }
+    .btn-primary:disabled { opacity:0.5; cursor:default; transform:none; }
+
+    /* ── MEMBERS LIST ── */
+    .section-title {
+      font-family:'Syne',sans-serif;
+      font-size:0.8rem; font-weight:700;
+      color:var(--muted);
+      text-transform:uppercase; letter-spacing:0.08em;
+      margin-bottom:1rem;
+    }
+
+    .members-list {
+      display:flex; flex-direction:column; gap:0.75rem;
+      animation: fadeUp 0.5s ease 0.2s both;
+    }
+
+    .member-card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:1rem 1.25rem;
+      display:flex; align-items:center; gap:1rem;
+      transition:transform 0.2s, border-color 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+    .member-card:hover {
+      transform:translateX(4px);
+      border-color:rgba(91,110,245,0.25);
+    }
+
+    /* Avatar */
+    .avatar {
+      width:42px; height:42px;
+      border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Syne',sans-serif;
+      font-size:1rem; font-weight:700;
+      flex-shrink:0;
+    }
+    .avatar-owner  { background:rgba(91,110,245,0.2); color:var(--accent); border:2px solid rgba(91,110,245,0.4); }
+    .avatar-member { background:rgba(91,245,163,0.1); color:var(--success); border:2px solid rgba(91,245,163,0.2); }
+
+    .member-info { flex:1; }
+    .member-name {
+      font-family:'Syne',sans-serif;
+      font-size:0.95rem; font-weight:700;
+    }
+    .member-email { font-size:0.8rem; color:var(--muted); margin-top:2px; }
+
+    .member-right { display:flex; align-items:center; gap:0.75rem; }
+
+    /* Role badge */
+    .role-badge {
+      font-size:0.7rem; font-weight:600;
+      padding:3px 10px; border-radius:20px;
+      text-transform:uppercase; letter-spacing:0.06em;
+    }
+    .role-owner  { background:rgba(91,110,245,0.15); color:var(--accent);  border:1px solid rgba(91,110,245,0.3); }
+    .role-member { background:rgba(91,245,163,0.1);  color:var(--success); border:1px solid rgba(91,245,163,0.2); }
+
+    /* Remove button */
+    .btn-remove {
+      background:none; border:none;
+      width:32px; height:32px;
+      border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; color:var(--muted);
+      font-size:1rem; transition:all 0.15s;
+    }
+    .btn-remove:hover { background:rgba(245,91,110,0.15); color:var(--danger); }
+
+    /* Empty state */
+    .empty-state {
+      text-align:center; padding:3rem;
+      color:var(--muted); font-size:0.88rem;
+    }
+    .empty-icon { font-size:2.5rem; margin-bottom:0.75rem; opacity:0.4; }
+
+    /* Loader */
+    .loader { text-align:center; padding:3rem; color:var(--muted); font-size:0.9rem; }
+    .spinner {
+      width:28px; height:28px;
+      border:2px solid var(--border);
+      border-top-color:var(--accent);
+      border-radius:50%;
+      animation:spin 0.7s linear infinite;
+      margin:0 auto 0.75rem;
+    }
+
+    /* ── TOAST ── */
+    .toast-container {
+      position:fixed; bottom:2rem; right:2rem;
+      z-members:500; display:flex; flex-direction:column; gap:0.5rem;
+    }
+    .toast {
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px 18px;
+      font-size:0.85rem;
+      display:flex; align-items:center; gap:8px;
+      animation:slideLeft 0.3s ease;
+      box-shadow:0 4px 24px rgba(0,0,0,0.4);
+    }
+    .toast.success { border-color:rgba(91,245,163,0.3); }
+    .toast.error   { border-color:rgba(245,91,110,0.3); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes slideLeft {
+      from { opacity:0; transform:translateX(20px); }
+      to   { opacity:1; transform:translateX(0); }
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .member-card:nth-child(1) { animation-delay:0.05s; }
+    .member-card:nth-child(2) { animation-delay:0.10s; }
+    .member-card:nth-child(3) { animation-delay:0.15s; }
+    .member-card:nth-child(4) { animation-delay:0.20s; }
+    .member-card:nth-child(5) { animation-delay:0.25s; }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <div class="nav-logo">Task<span>Flow</span></div>
+    <div class="nav-right">
+      <span class="nav-user" id="nav-username"></span>
+      <button class="btn-logout" onclick="logout()">Déconnexion</button>
+    </div>
+  </nav>
+
+  <!-- PAGE -->
+  <div class="page">
+
+    <!-- HEADER -->
+    <div class="page-header">
+      <a class="back-link" href="projects.html">← Retour aux projets</a>
+      <h1 class="page-title">Gestion des <span>Membres</span></h1>
+      <p class="project-name" id="project-name">Chargement...</p>
+    </div>
+
+    <!-- INVITE BOX (visible seulement pour le créateur) -->
+    <div class="invite-box" id="invite-box" style="display:none;">
+      <div class="invite-title">📧 Inviter un membre</div>
+      <div class="invite-row">
+        <input
+          type="email"
+          id="invite-email"
+          class="form-control"
+          placeholder="email@exemple.com"
+        />
+        <button class="btn-primary" id="btn-invite" onclick="inviterMembre()">
+          Inviter
+        </button>
+      </div>
+    </div>
+
+    <!-- MEMBERS LIST -->
+    <div class="section-title" id="section-title">Membres</div>
+    <div class="members-list" id="members-list">
+      <div class="loader">
+        <div class="spinner"></div>
+        Chargement des membres...
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TOASTS -->
+  <div class="toast-container" id="toasts"></div>
+
+  <script>
+    
+    const API = 'http://localhost:5000/api';
+
+    // Récupérer le projectId depuis l'URL → ?projectId=xxxx
+    const params    = new URLSearchParams(window.location.search);
+    const projectId = params.get('projectId');
+
+    if (!projectId) window.location.href = 'projects.html';
+
+    const token = localStorage.getItem('token');
+    if (!token)  window.location.href = 'members.html';
+
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    document.getElementById('nav-username').textContent = user.name || '';
+
+    let isOwnerUser = false; // sera mis à true si c'est le créateur
+
+    
+    async function loadMembers() {
+      try {
+        const res = await axios.get(`${API}/projects/${projectId}/members`);
+        const { owner, members } = res.data;
+
+        // Nom du projet
+        const projRes = await axios.get(`${API}/projects`);
+        const projet  = projRes.data.data.find(p => p._id === projectId);
+        if (projet) {
+          document.getElementById('project-name').textContent = `Projet : ${projet.title}`;
+        }
+
+        // Vérifier si l'utilisateur connecté est le créateur
+        isOwnerUser = owner._id === user.id || owner._id === user._id;
+        if (isOwnerUser) {
+          document.getElementById('invite-box').style.display = 'block';
+        }
+
+        // Afficher le nombre
+        const total = members.length;
+        document.getElementById('section-title').textContent =
+          `${total + 1} membre${total + 1 > 1 ? 's' : ''} (créateur inclus)`;
+
+        renderMembers(owner, members);
+
+      } catch (err) {
+        handleError(err);
+      }
+    }
+
+    
+    function renderMembers(owner, members) {
+      const list = document.getElementById('members-list');
+
+      if (members.length === 0 && !isOwnerUser) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            Aucun membre pour l'instant.
+          </div>`;
+        return;
+      }
+
+      // Carte créateur
+      let html = memberCardHTML(owner, 'owner', false);
+
+      // Cartes membres
+      members.forEach(m => {
+        html += memberCardHTML(m, 'member', isOwnerUser);
+      });
+
+      list.innerHTML = html;
+    }
+
+    function memberCardHTML(person, role, canRemove) {
+      const initiale = (person.name || person.email || '?')[0].toUpperCase();
+      const avatarClass = role === 'owner' ? 'avatar-owner' : 'avatar-member';
+      const badgeClass  = role === 'owner' ? 'role-owner'   : 'role-member';
+      const badgeLabel  = role === 'owner' ? 'Créateur'     : 'Membre';
+
+      const removeBtn = canRemove ? `
+        <button class="btn-remove" title="Retirer ce membre"
+          onclick="retirerMembre('${person._id}', '${escHtml(person.name)}')">
+          ✕
+        </button>` : '';
+
+      return `
+        <div class="member-card">
+          <div class="avatar ${avatarClass}">${initiale}</div>
+          <div class="member-info">
+            <div class="member-name">${escHtml(person.name || '—')}</div>
+            <div class="member-email">${escHtml(person.email)}</div>
+          </div>
+          <div class="member-right">
+            <span class="role-badge ${badgeClass}">${badgeLabel}</span>
+            ${removeBtn}
+          </div>
+        </div>`;
+    }
+
+    // ─── INVITER ──────────────────────────────────────────
+    async function inviterMembre() {
+      const email = document.getElementById('invite-email').value.trim();
+      if (!email) { showToast('Entrez un email.', 'error'); return; }
+
+      const btn = document.getElementById('btn-invite');
+      btn.disabled = true; btn.textContent = '...';
+
+      try {
+        const res = await axios.post(`${API}/projects/${projectId}/members`, { email });
+        showToast(res.data.message, 'success');
+        document.getElementById('invite-email').value = '';
+        loadMembers();
+      } catch (err) {
+        handleError(err);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Inviter';
+      }
+    }
+
+    // ─── RETIRER ──────────────────────────────────────────
+    async function retirerMembre(userId, name) {
+      if (!confirm(`Retirer "${name}" du projet ?`)) return;
+      try {
+        await axios.delete(`${API}/projects/${projectId}/members/${userId}`);
+        showToast(`${name} retiré du projet.`, 'success');
+        loadMembers();
+      } catch (err) {
+        handleError(err);
+      }
+    }
+
+    // ─── LOGOUT ───────────────────────────────────────────
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
+
+    // ─── UTILS ────────────────────────────────────────────
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function showToast(msg, type = 'success') {
+      const icon = type === 'success' ? '✅' : '❌';
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<span>${icon}</span> ${msg}`;
+      document.getElementById('toasts').appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function handleError(err) {
+      const msg = err.response?.data?.message || 'Une erreur est survenue.';
+      if (err.response?.status === 401) logout();
+      else showToast(msg, 'error');
+    }
+
+    // ─── INIT ─────────────────────────────────────────────
+    loadMembers();
+  </script>
+</body>
+</html>

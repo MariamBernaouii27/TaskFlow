@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+
+  # SERVICE 1 — MongoDB dans un container
+  
+  mongo:
+    image: mongo:6.0
+    container_name: taskflow-mongo
+    restart: always
+    ports:
+      - "27017:27017"         # port local:port container
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root1234
+      MONGO_INITDB_DATABASE: taskflow
+    volumes:
+      - mongo-data:/data/db   # sauvegarde les données même après redémarrage
+
+  
+  # SERVICE 2 — Backend Node.js + Express
+  
+  backend:
+    build: ./backend          # cherche le Dockerfile dans le dossier backend
+    container_name: taskflow-backend
+    restart: always
+    ports:
+      - "5000:5000"           # port local:port container
+    environment:
+      PORT: 5000
+      MONGO_URI: mongodb://root:root1234@mongo:27017/taskflow?authSource=admin
+      JWT_SECRET: votre_clé_secrète_très_longue_ici
+    depends_on:
+      - mongo                 # attend que MongoDB soit prêt avant de démarrer
+    volumes:
+      - ./backend:/app        # synchronise le code local avec le container
+      - /app/node_modules     # évite d'écraser node_modules du container
+
+volumes:
+  mongo-data:                 # volume persistant pour les données MongoDB

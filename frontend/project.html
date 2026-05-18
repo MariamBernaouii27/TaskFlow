@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>TaskFlow - Mes Projets</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <style>
+
+    :root{
+      --bg:#0b0b12;
+      --card:#151520;
+      --card2:#1c1c2b;
+      --border:rgba(255,255,255,.08);
+
+      --text:#f3f3ff;
+      --muted:#9090aa;
+
+      --primary:#6c7cff;
+      --danger:#ff5f7a;
+      --success:#4ee6a1;
+
+      --radius:18px;
+    }
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:"DM Sans",sans-serif;
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    /* BACKGROUND */
+
+    body::before{
+      content:"";
+      position:fixed;
+      width:500px;
+      height:500px;
+      border-radius:50%;
+      background:rgba(108,124,255,.15);
+      top:-200px;
+      left:-150px;
+      filter:blur(80px);
+      z-index:-1;
+    }
+
+    body::after{
+      content:"";
+      position:fixed;
+      width:450px;
+      height:450px;
+      border-radius:50%;
+      background:rgba(255,95,122,.12);
+      bottom:-180px;
+      right:-140px;
+      filter:blur(80px);
+      z-index:-1;
+    }
+
+    /* NAVBAR */
+
+    nav{
+      width:100%;
+      height:70px;
+
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+
+      padding:0 40px;
+
+      background:rgba(10,10,15,.7);
+      backdrop-filter:blur(12px);
+
+      border-bottom:1px solid var(--border);
+
+      position:sticky;
+      top:0;
+      z-index:100;
+    }
+
+    .logo{
+      font-size:1.5rem;
+      font-family:"Syne",sans-serif;
+      font-weight:800;
+    }
+
+    .logo span{
+      color:var(--primary);
+    }
+
+    .logout-btn{
+      background:transparent;
+      border:1px solid var(--border);
+      color:var(--muted);
+
+      padding:10px 18px;
+      border-radius:12px;
+
+      cursor:pointer;
+
+      transition:.2s;
+    }
+
+    .logout-btn:hover{
+      border-color:var(--danger);
+      color:var(--danger);
+    }
+
+    /* PAGE */
+
+    .container{
+      width:100%;
+      max-width:1200px;
+      margin:auto;
+
+      padding:50px 25px;
+    }
+
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+
+      margin-bottom:40px;
+    }
+
+    .title{
+      font-size:3rem;
+      font-family:"Syne",sans-serif;
+      font-weight:800;
+      line-height:1;
+    }
+
+    .title span{
+      color:var(--primary);
+    }
+
+    .subtitle{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:.95rem;
+    }
+
+    /* BUTTON */
+
+    .btn{
+      border:none;
+      outline:none;
+
+      background:var(--primary);
+      color:white;
+
+      padding:14px 22px;
+
+      border-radius:14px;
+
+      font-weight:700;
+      cursor:pointer;
+
+      transition:.2s;
+    }
+
+    .btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 10px 30px rgba(108,124,255,.3);
+    }
+
+    /* GRID */
+
+    .projects{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:22px;
+    }
+
+    /* CARD */
+
+    .card{
+      background:linear-gradient(
+        180deg,
+        var(--card),
+        var(--card2)
+      );
+
+      border:1px solid var(--border);
+
+      border-radius:var(--radius);
+
+      padding:22px;
+
+      transition:.25s;
+    }
+
+    .card:hover{
+      transform:translateY(-5px);
+      border-color:rgba(108,124,255,.4);
+
+      box-shadow:
+      0 10px 30px rgba(0,0,0,.4);
+    }
+
+    .card-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+
+      margin-bottom:18px;
+    }
+
+    .card-title{
+      font-size:1.2rem;
+      font-weight:700;
+      font-family:"Syne",sans-serif;
+    }
+
+    .card-desc{
+      color:var(--muted);
+      line-height:1.7;
+      margin-bottom:25px;
+      min-height:60px;
+    }
+
+    .badge{
+      display:inline-block;
+
+      padding:7px 12px;
+
+      border-radius:30px;
+
+      font-size:.75rem;
+      font-weight:700;
+
+      text-transform:uppercase;
+    }
+
+    .actif{
+      background:rgba(78,230,161,.12);
+      color:var(--success);
+    }
+
+    .pause{
+      background:rgba(255,193,7,.12);
+      color:#ffc107;
+    }
+
+    .archive{
+      background:rgba(255,255,255,.08);
+      color:#bbb;
+    }
+
+    .card-footer{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .date{
+      color:var(--muted);
+      font-size:.85rem;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+    }
+
+    .icon-btn{
+      width:38px;
+      height:38px;
+
+      border:none;
+
+      border-radius:10px;
+
+      cursor:pointer;
+
+      background:rgba(255,255,255,.05);
+
+      color:white;
+
+      transition:.2s;
+    }
+
+    .icon-btn:hover{
+      transform:scale(1.05);
+    }
+
+    .edit:hover{
+      background:rgba(108,124,255,.2);
+      color:var(--primary);
+    }
+
+    .delete:hover{
+      background:rgba(255,95,122,.15);
+      color:var(--danger);
+    }
+
+    /* MODAL */
+
+    .modal-overlay{
+      position:fixed;
+      inset:0;
+
+      background:rgba(0,0,0,.75);
+
+      display:none;
+      align-items:center;
+      justify-content:center;
+
+      z-index:500;
+    }
+
+    .modal-overlay.open{
+      display:flex;
+    }
+
+    .modal{
+      width:95%;
+      max-width:520px;
+
+      background:var(--card);
+
+      border:1px solid var(--border);
+
+      border-radius:24px;
+
+      padding:30px;
+    }
+
+    .modal h2{
+      margin-bottom:25px;
+      font-family:"Syne",sans-serif;
+    }
+
+    .input{
+      width:100%;
+
+      padding:14px 16px;
+
+      background:#11111a;
+
+      border:1px solid var(--border);
+
+      border-radius:14px;
+
+      color:white;
+
+      margin-bottom:16px;
+
+      outline:none;
+    }
+
+    .input:focus{
+      border-color:var(--primary);
+    }
+
+    textarea{
+      resize:none;
+      min-height:110px;
+    }
+
+    .modal-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:12px;
+      margin-top:15px;
+    }
+
+    .cancel{
+      background:transparent;
+      border:1px solid var(--border);
+      color:var(--muted);
+    }
+
+    .cancel:hover{
+      border-color:white;
+      color:white;
+    }
+
+    /* EMPTY */
+
+    .empty{
+      text-align:center;
+      padding:100px 20px;
+      color:var(--muted);
+    }
+
+    .empty h2{
+      margin-top:20px;
+      color:white;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+
+  <nav>
+
+    <div class="logo">
+      Task<span>Flow</span>
+    </div>
+
+    <button class="logout-btn">
+      Déconnexion
+    </button>
+
+  </nav>
+
+  <!-- PAGE -->
+
+  <div class="container">
+
+    <div class="top">
+
+      <div>
+
+        <div class="title">
+          Mes <span>Projets</span>
+        </div>
+
+        <div class="subtitle">
+          Organisez vos projets avec un design moderne.
+        </div>
+
+      </div>
+
+      <button class="btn" onclick="openModal()">
+        + Nouveau Projet
+      </button>
+
+    </div>
+
+    <!-- PROJECTS -->
+
+    <div class="projects" id="projects"></div>
+
+  </div>
+
+  <!-- MODAL -->
+
+  <div class="modal-overlay" id="modal">
+
+    <form class="modal" onsubmit="submitForm(event)">
+
+      <h2 id="modal-title">
+        Nouveau Projet
+      </h2>
+
+      <input
+        type="text"
+        id="title"
+        class="input"
+        placeholder="Titre du projet"
+        required
+      >
+
+      <textarea
+        id="desc"
+        class="input"
+        placeholder="Description..."
+      ></textarea>
+
+      <input
+        type="date"
+        id="deadline"
+        class="input"
+      >
+
+      <select id="status" class="input">
+
+        <option value="actif">
+          Actif
+        </option>
+
+        <option value="en pause">
+          En pause
+        </option>
+
+        <option value="archivé">
+          Archivé
+        </option>
+
+      </select>
+
+      <div class="modal-actions">
+
+        <button
+          type="button"
+          class="btn cancel"
+          onclick="closeModal()"
+        >
+          Annuler
+        </button>
+
+        <button
+          type="submit"
+          class="btn"
+        >
+          Enregistrer
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+<script>
+
+const projects = [
+
+  {
+    id:1,
+    title:"Application Mobile",
+    description:"Création d'une application moderne avec React Native.",
+    status:"actif",
+    deadline:"2026-06-10"
+  },
+
+  {
+    id:2,
+    title:"Dashboard Admin",
+    description:"Interface d'administration élégante et responsive.",
+    status:"en pause",
+    deadline:"2026-07-01"
+  },
+
+  {
+    id:3,
+    title:"Portfolio",
+    description:"Nouveau portfolio professionnel avec animations.",
+    status:"archivé",
+    deadline:"2026-05-30"
+  }
+
+];
+
+function renderProjects(){
+
+  const container =
+  document.getElementById("projects");
+
+  if(projects.length === 0){
+
+    container.innerHTML = `
+      <div class="empty">
+        <h2>Aucun projet</h2>
+        <p>Créez votre premier projet.</p>
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML =
+  projects.map(project => `
+
+    <div class="card">
+
+      <div class="card-top">
+
+        <div class="card-title">
+          ${project.title}
+        </div>
+
+        <div class="actions">
+
+          <button class="icon-btn edit">
+            ✏
+          </button>
+
+          <button class="icon-btn delete">
+            🗑
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="card-desc">
+        ${project.description}
+      </div>
+
+      <div class="card-footer">
+
+        <div class="badge ${
+          project.status === "actif"
+          ? "actif"
+          : project.status === "en pause"
+          ? "pause"
+          : "archive"
+        }">
+
+          ${project.status}
+
+        </div>
+
+        <div class="date">
+          📅 ${project.deadline}
+        </div>
+
+      </div>
+
+    </div>
+
+  `).join("");
+
+}
+
+function openModal(){
+
+  document
+  .getElementById("modal")
+  .classList.add("open");
+
+}
+
+function closeModal(){
+
+  document
+  .getElementById("modal")
+  .classList.remove("open");
+
+}
+
+function submitForm(event){
+
+  event.preventDefault();
+
+  closeModal();
+
+  alert("Projet enregistré ✔");
+
+}
+
+renderProjects();
+
+</script>
+
+</body>
+</html>
