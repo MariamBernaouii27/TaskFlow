@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cyan: #00f5ff;
+      --purple: #7c3aed;
+      --dark: #03081c;
+      --glass: rgba(2, 6, 23, 0.75);
+      --border: rgba(0, 245, 255, 0.15);
+      --text-dim: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--dark);
+      color: white;
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+   
+    #bg-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #app {
+      position: relative;
+      z-index: 2;
+      width: 90%;
+      max-width: 580px;
+      padding: 50px 0 80px;
+    }
+
+    h1 {
+      text-align: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--cyan);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-shadow:
+        0 0 10px rgba(0,245,255,0.8),
+        0 0 40px rgba(0,245,255,0.4),
+        0 0 80px rgba(0,245,255,0.2);
+      margin-bottom: 8px;
+      animation: flicker 6s infinite;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+      font-family: 'Orbitron', monospace;
+    }
+
+    @keyframes flicker {
+      0%, 95%, 100% { opacity: 1; }
+      96% { opacity: 0.8; }
+      97% { opacity: 1; }
+      98% { opacity: 0.6; }
+      99% { opacity: 1; }
+    }
+
+    .section {
+      background: var(--glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      padding: 28px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      animation: slideUp 0.6s ease both;
+    }
+
+    .section:nth-child(2) { animation-delay: 0.1s; }
+    .section:nth-child(3) { animation-delay: 0.2s; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    
+    .section::before, .section::after {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      border-color: var(--cyan);
+      border-style: solid;
+    }
+    .section::before { top: 0; left: 0; border-width: 2px 0 0 2px; }
+    .section::after  { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+    h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      border-radius: 3px;
+      border: 1px solid #1e3a5f;
+      background: rgba(0, 0, 0, 0.4);
+      color: white;
+      display: block;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 2px rgba(0,245,255,0.1), 0 0 20px rgba(0,245,255,0.05);
+    }
+
+    select option { background: #0f172a; }
+
+    button#submitBtn {
+      width: 100%;
+      padding: 13px;
+      background: transparent;
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+      border-radius: 3px;
+      font-weight: 700;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      cursor: pointer;
+      text-transform: uppercase;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    button#submitBtn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--cyan);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: -1;
+    }
+
+    button#submitBtn:hover {
+      color: var(--dark);
+      box-shadow: 0 0 30px rgba(0,245,255,0.4);
+    }
+
+    button#submitBtn:hover::before { transform: translateX(0); }
+
+    #cancelBtn {
+      display: none;
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid #334155;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem;
+      margin-top: 8px;
+      transition: border-color 0.2s;
+    }
+    #cancelBtn:hover { border-color: #64748b; }
+
+    
+    .filter-group { margin-bottom: 14px; }
+    .filter-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 8px;
+    }
+    .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .filter-btn {
+      padding: 5px 14px;
+      border-radius: 2px;
+      border: 1px solid #1e3a5f;
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .filter-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .filter-btn.active {
+      background: rgba(0,245,255,0.1);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0,245,255,0.15);
+    }
+
+    #searchInput { margin-bottom: 16px; }
+
+    .results-count {
+      font-size: 0.78rem;
+      color: #475569;
+      margin-bottom: 12px;
+      font-family: 'Orbitron', monospace;
+      letter-spacing: 0.05em;
+    }
+
+    
+    .task-item {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #1e293b;
+      border-left: 3px solid var(--cyan);
+      border-radius: 3px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .task-item:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 20px rgba(0,245,255,0.08);
+    }
+
+    .task-info { flex: 1; }
+    .task-info.completed strong {
+      text-decoration: line-through;
+      color: #475569;
+    }
+
+    .task-info strong {
+      font-size: 1rem;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .task-desc {
+      color: #64748b;
+      font-size: 0.88rem;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .badges { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .status-badge, .priority-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 2px;
+      font-size: 0.7rem;
+      font-family: 'Orbitron', monospace;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .status-completed    { background: rgba(6,78,59,0.5);  color: #34d399; border: 1px solid #065f46; }
+    .status-in-progress  { background: rgba(30,58,95,0.5); color: #60a5fa; border: 1px solid #1e40af; }
+
+    .priority-low    { background: rgba(30,41,59,0.5); color: #94a3b8; border: 1px solid #334155; }
+    .priority-medium { background: rgba(45,31,0,0.5);  color: #fbbf24; border: 1px solid #92400e; }
+    .priority-high   { background: rgba(45,10,10,0.5); color: #f87171; border: 1px solid #991b1b; }
+
+    .actions { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+    .actions button {
+      padding: 5px 12px;
+      border: 1px solid;
+      border-radius: 2px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      background: transparent;
+      transition: all 0.2s;
+    }
+    .btn-complete { color: #34d399; border-color: #065f46; }
+    .btn-complete:hover { background: rgba(6,78,59,0.4); }
+    .btn-resume   { color: #fbbf24; border-color: #92400e; }
+    .btn-resume:hover { background: rgba(45,31,0,0.4); }
+    .btn-edit     { color: #60a5fa; border-color: #1e40af; }
+    .btn-edit:hover { background: rgba(30,58,95,0.4); }
+    .btn-delete   { color: #f87171; border-color: #991b1b; }
+    .btn-delete:hover { background: rgba(45,10,10,0.4); }
+
+    
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .page-btn {
+      padding: 6px 16px;
+      border-radius: 2px;
+      border: 1px solid #1e3a5f;
+      background: transparent;
+      color: white;
+      cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .page-btn:disabled { opacity: 0.25; cursor: default; }
+    .page-btn:not(:disabled):hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0,245,255,0.2);
+    }
+    .page-info {
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-family: 'Orbitron', monospace;
+    }
+
+    
+    .message {
+      padding: 10px 14px;
+      border-radius: 3px;
+      margin-bottom: 14px;
+      display: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .message.success { background: rgba(6,78,59,0.4); color: #34d399; border: 1px solid #065f46; }
+    .message.error   { background: rgba(45,10,10,0.4); color: #f87171; border: 1px solid #991b1b; }
+  </style>
+</head>
+<body>
+
+ 
+  <canvas id="bg-canvas"></canvas>
+
+  <div id="app">
+    <h1>TaskFlow</h1>
+    <p class="subtitle">Project Management System</p>
+
+    
+    <div class="section">
+      <h2 id="formTitle"></h2>
+      <div id="validationMessage" class="message"></div>
+      <form id="taskForm">
+        <input type="hidden" id="taskId">
+        <input type="text" id="title" placeholder="Task title...">
+        <textarea id="description" placeholder="Description..." rows="3"></textarea>
+        <select id="priority">
+          <option value="low">Low Priority</option>
+          <option value="medium" selected>Medium Priority</option>
+          <option value="high">High Priority</option>
+        </select>
+        <button type="submit" id="submitBtn">Add Task</button>
+        <button type="button" id="cancelBtn">Cancel</button>
+      </form>
+    </div>
+
+    
+    <div class="section">
+      <h2>// Task List</h2>
+
+      <input type="text" id="searchInput" placeholder="Search by title or description...">
+
+      <div class="filter-group">
+        <div class="filter-label">Status</div>
+        <div class="filter-tabs" id="statusFilters">
+          <button class="filter-btn active" data-status="all">All</button>
+          <button class="filter-btn" data-status="in progress">In Progress</button>
+          <button class="filter-btn" data-status="completed">Completed</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Priority</div>
+        <div class="filter-tabs" id="priorityFilters">
+          <button class="filter-btn active" data-priority="all">All</button>
+          <button class="filter-btn" data-priority="low">Low</button>
+          <button class="filter-btn" data-priority="medium">Medium</button>
+          <button class="filter-btn" data-priority="high">High</button>
+        </div>
+      </div>
+
+      <div class="results-count" id="resultsCount"></div>
+      <div id="taskList"></div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    
+    const canvas = document.getElementById('bg-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.z = 30;
+
+    
+    const starsGeo = new THREE.BufferGeometry();
+    const starCount = 800;
+    const positions = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount * 3; i++) {
+      positions[i] = (Math.random() - 0.5) * 120;
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const starsMat = new THREE.PointsMaterial({ color: 0x00f5ff, size: 0.12, transparent: true, opacity: 0.5 });
+    scene.add(new THREE.Points(starsGeo, starsMat));
+
+    
+    const shapes = [];
+    const geometries = [
+      new THREE.IcosahedronGeometry(3, 0),
+      new THREE.OctahedronGeometry(2.5, 0),
+      new THREE.TetrahedronGeometry(2, 0),
+      new THREE.IcosahedronGeometry(1.5, 0),
+      new THREE.OctahedronGeometry(4, 0),
+      new THREE.TetrahedronGeometry(3, 0),
+    ];
+
+    const wireMat  = new THREE.MeshBasicMaterial({ color: 0x00f5ff, wireframe: true, transparent: true, opacity: 0.12 });
+    const wireMat2 = new THREE.MeshBasicMaterial({ color: 0x7c3aed, wireframe: true, transparent: true, opacity: 0.1  });
+
+    geometries.forEach((geo, i) => {
+      const mesh = new THREE.Mesh(geo, i % 2 === 0 ? wireMat : wireMat2);
+      mesh.position.set(
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 30,
+        (Math.random() - 0.5) * 20 - 5
+      );
+      mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+      shapes.push({ mesh, speed: 0.002 + Math.random() * 0.003, drift: (Math.random() - 0.5) * 0.001 });
+      scene.add(mesh);
+    });
+
+   
+    const gridHelper = new THREE.GridHelper(80, 20, 0x00f5ff, 0x0f2744);
+    gridHelper.position.y = -14;
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity = 0.15;
+    scene.add(gridHelper);
+
+    
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', e => {
+      mouseX = (e.clientX / window.innerWidth  - 0.5) * 2;
+      mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    
+    let t = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      t += 0.005;
+
+      shapes.forEach(({ mesh, speed, drift }) => {
+        mesh.rotation.x += speed;
+        mesh.rotation.y += speed * 0.7;
+        mesh.position.y += Math.sin(t + mesh.position.x) * 0.005;
+      });
+
+     
+      camera.position.x += (mouseX * 3 - camera.position.x) * 0.03;
+      camera.position.y += (-mouseY * 2 - camera.position.y) * 0.03;
+      camera.lookAt(scene.position);
+
+      
+      gridHelper.position.z = (t * 2) % 4;
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+
+  <script src="app.js"></script>
+</body>
+</html>
