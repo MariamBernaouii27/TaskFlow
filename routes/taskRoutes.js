@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
 
-// 1. إنشاء مهمة جديدة
 router.post('/taches', async (req, res) => {
     try {
         const nouvelleTache = new Task(req.body);
@@ -13,7 +12,6 @@ router.post('/taches', async (req, res) => {
     }
 });
 
-// 2. إظهار جميع المهام
 router.get('/taches', async (req, res) => {
     try {
         const taches = await Task.find().populate('assigneA', 'nom email');
@@ -23,7 +21,6 @@ router.get('/taches', async (req, res) => {
     }
 });
 
-// 3. تعديل مهمة أو تعيينها لمستخدم
 router.put('/taches/:id', async (req, res) => {
     try {
         const tacheModifiee = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -33,7 +30,6 @@ router.put('/taches/:id', async (req, res) => {
     }
 });
 
-// 4. حذف مهمة
 router.delete('/taches/:id', async (req, res) => {
     try {
         await Task.findByIdAndDelete(req.params.id);
