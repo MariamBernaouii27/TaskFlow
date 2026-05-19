@@ -1,3 +1,4 @@
+// Feature 6: Filtrage dynamique, recherche et pagination
 const draftKey  = 'taskflow_draft';
 const tasksKey  = 'taskflow_tasks';
 
@@ -6,7 +7,6 @@ let currentPriorityFilter = 'all';
 let currentSearch         = '';
 let currentPage           = 1;
 const ITEMS_PER_PAGE      = 5;
-
 
 const taskForm          = document.getElementById('taskForm');
 const taskIdInput       = document.getElementById('taskId');
@@ -18,16 +18,16 @@ const taskList          = document.getElementById('taskList');
 const submitBtn         = document.getElementById('submitBtn');
 const cancelBtn         = document.getElementById('cancelBtn');
 const formTitle         = document.getElementById('formTitle');
-const searchInput       = document.getElementById('searchInput');   // Feature 6
-const resultsCount      = document.getElementById('resultsCount');  // Feature 6
-const paginationDiv     = document.getElementById('pagination');    // Feature 6
+const searchInput       = document.getElementById('searchInput');
+const resultsCount      = document.getElementById('resultsCount');
+const paginationDiv     = document.getElementById('pagination');
 
 let tasks = JSON.parse(localStorage.getItem(tasksKey)) || [];
 
 document.addEventListener('DOMContentLoaded', () => {
   const savedDraft = localStorage.getItem(draftKey);
   if (savedDraft) {
-    const confirmRestore = confirm('We found an unsaved draft. Would you like to restore it?');
+    const confirmRestore = confirm('Nous avons trouvé un brouillon non sauvegardé. Voulez-vous le restaurer ?');
     if (confirmRestore) {
       const draftData = JSON.parse(savedDraft);
       titleInput.value       = draftData.title       || '';
@@ -40,9 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTasks();
 });
 
-
 taskForm.addEventListener('input', () => {
-  if (taskIdInput.value !== '') return; 
+  if (taskIdInput.value !== '') return;
 
   const taskData = {
     title:       titleInput.value,
@@ -52,13 +51,11 @@ taskForm.addEventListener('input', () => {
   localStorage.setItem(draftKey, JSON.stringify(taskData));
 });
 
-
 searchInput.addEventListener('input', () => {
   currentSearch = searchInput.value.trim().toLowerCase();
   currentPage   = 1;
   renderTasks();
 });
-
 
 document.getElementById('statusFilters').addEventListener('click', (e) => {
   const btn = e.target.closest('.filter-btn');
@@ -72,7 +69,6 @@ document.getElementById('statusFilters').addEventListener('click', (e) => {
   renderTasks();
 });
 
-
 document.getElementById('priorityFilters').addEventListener('click', (e) => {
   const btn = e.target.closest('.filter-btn');
   if (!btn) return;
@@ -85,7 +81,6 @@ document.getElementById('priorityFilters').addEventListener('click', (e) => {
   renderTasks();
 });
 
-
 function showMessage(text, type) {
   validationMessage.textContent = text;
   validationMessage.className   = `message ${type}`;
@@ -93,18 +88,12 @@ function showMessage(text, type) {
   setTimeout(() => { validationMessage.style.display = 'none'; }, 3000);
 }
 
-
 function getFilteredTasks() {
   return tasks.filter(task => {
-  
-    const statusMatch = currentStatusFilter === 'all' || task.status === currentStatusFilter;
-
-    
+    const statusMatch   = currentStatusFilter === 'all' || task.status === currentStatusFilter;
     const priorityMatch = currentPriorityFilter === 'all' || task.priority === currentPriorityFilter;
-
-    
-    const keyword = currentSearch;
-    const searchMatch = !keyword ||
+    const keyword       = currentSearch;
+    const searchMatch   = !keyword ||
       task.title.toLowerCase().includes(keyword) ||
       (task.description || '').toLowerCase().includes(keyword);
 
@@ -112,31 +101,29 @@ function getFilteredTasks() {
   });
 }
 
-
 function renderTasks() {
-  taskList.innerHTML    = '';
+  taskList.innerHTML      = '';
   paginationDiv.innerHTML = '';
 
   const filtered = getFilteredTasks();
   const total    = filtered.length;
 
-  
   resultsCount.textContent = total === 0
-    ? 'No tasks match your filters.'
-    : `Showing ${Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, total)}–${Math.min(currentPage * ITEMS_PER_PAGE, total)} of ${total} task${total !== 1 ? 's' : ''}`;
+    ? 'Aucune tâche ne correspond à vos filtres.'
+    : `Affichage ${Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, total)}–${Math.min(currentPage * ITEMS_PER_PAGE, total)} sur ${total} tâche${total !== 1 ? 's' : ''}`;
 
   if (total === 0) {
-    taskList.innerHTML = '<p style="text-align:center;color:#64748b;">No tasks found.</p>';
+    taskList.innerHTML = '<p style="text-align:center;color:#64748b;">Aucune tâche trouvée.</p>';
     return;
   }
 
-  
-  const totalPages  = Math.ceil(total / ITEMS_PER_PAGE);
-  currentPage       = Math.min(currentPage, totalPages); // guard after deletion
-  const start       = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginated   = filtered.slice(start, start + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+  currentPage      = Math.min(currentPage, totalPages);
+  const start      = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginated  = filtered.slice(start, start + ITEMS_PER_PAGE);
 
-  
+  const priorityLabels = { low: 'Basse', medium: 'Moyenne', high: 'Haute' };
+
   paginated.forEach(task => {
     const isCompleted = task.status === 'completed';
     const taskDiv     = document.createElement('div');
@@ -147,38 +134,37 @@ function renderTasks() {
     taskDiv.innerHTML = `
       <div class="task-info ${isCompleted ? 'completed' : ''}">
         <strong>${task.title}</strong>
-        <span class="priority-badge ${priorityClass}">${task.priority}</span>
+        <span class="priority-badge ${priorityClass}">${priorityLabels[task.priority] || task.priority}</span>
         <div style="margin:5px 0;color:#94a3b8;font-size:0.9rem;">${task.description || ''}</div>
         <span class="status-badge ${isCompleted ? 'status-completed' : 'status-in-progress'}">
-          ${isCompleted ? 'Completed' : 'In Progress'}
+          ${isCompleted ? 'Terminé' : 'En cours'}
         </span>
       </div>
       <div class="actions">
         <button onclick="toggleStatus(${task.id})" style="background:${isCompleted ? '#92400e' : '#065f46'};">
-          ${isCompleted ? 'Resume' : 'Complete'}
+          ${isCompleted ? 'Reprendre' : 'Terminer'}
         </button>
-        <button onclick="editTask(${task.id})" style="background:#1e40af;">Edit</button>
-        <button onclick="deleteTask(${task.id})" style="background:#7f1d1d;">Delete</button>
+        <button onclick="editTask(${task.id})" style="background:#1e40af;">Modifier</button>
+        <button onclick="deleteTask(${task.id})" style="background:#7f1d1d;">Supprimer</button>
       </div>
     `;
     taskList.appendChild(taskDiv);
   });
 
-  
   if (totalPages > 1) {
     const prevBtn = document.createElement('button');
     prevBtn.className   = 'page-btn';
-    prevBtn.textContent = '← Prev';
+    prevBtn.textContent = '← Préc';
     prevBtn.disabled    = currentPage === 1;
     prevBtn.onclick     = () => { currentPage--; renderTasks(); };
 
     const info = document.createElement('span');
     info.className   = 'page-info';
-    info.textContent = `Page ${currentPage} of ${totalPages}`;
+    info.textContent = `Page ${currentPage} sur ${totalPages}`;
 
     const nextBtn = document.createElement('button');
     nextBtn.className   = 'page-btn';
-    nextBtn.textContent = 'Next →';
+    nextBtn.textContent = 'Suiv →';
     nextBtn.disabled    = currentPage === totalPages;
     nextBtn.onclick     = () => { currentPage++; renderTasks(); };
 
@@ -186,13 +172,12 @@ function renderTasks() {
   }
 }
 
-
 taskForm.addEventListener('submit', (e) => {
   e.preventDefault();
 
   const title = titleInput.value.trim();
   if (!title) {
-    showMessage('Title is required!', 'error');
+    showMessage('Le titre est obligatoire !', 'error');
     return;
   }
 
@@ -204,7 +189,7 @@ taskForm.addEventListener('submit', (e) => {
       tasks[taskIndex].title       = title;
       tasks[taskIndex].description = descriptionInput.value;
       tasks[taskIndex].priority    = priorityInput.value;
-      showMessage('Task updated successfully!', 'success');
+      showMessage('Tâche mise à jour avec succès !', 'success');
     }
     resetFormState();
   } else {
@@ -216,19 +201,18 @@ taskForm.addEventListener('submit', (e) => {
       status:      'in progress'
     };
     tasks.unshift(newTask);
-    showMessage('Task added successfully!', 'success');
-    localStorage.removeItem(draftKey); // Feature 7: clear draft on successful submit
+    showMessage('Tâche ajoutée avec succès !', 'success');
+    localStorage.removeItem(draftKey);
   }
 
   saveData();
   taskForm.reset();
 });
 
-
 window.deleteTask = (id) => {
-  if (confirm('Are you sure you want to delete this task?')) {
+  if (confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
     tasks = tasks.filter(task => task.id !== id);
-    showMessage('Task deleted!', 'success');
+    showMessage('Tâche supprimée !', 'success');
     saveData();
   }
 };
@@ -249,9 +233,9 @@ window.editTask = (id) => {
     descriptionInput.value = task.description;
     priorityInput.value    = task.priority;
 
-    formTitle.textContent    = 'Edit Task';
-    submitBtn.textContent    = 'Save Changes';
-    cancelBtn.style.display  = 'block';
+    formTitle.textContent   = 'Modifier la tâche';
+    submitBtn.textContent   = 'Sauvegarder';
+    cancelBtn.style.display = 'block';
 
     window.scrollTo(0, 0);
   }
@@ -264,8 +248,8 @@ cancelBtn.addEventListener('click', () => {
 
 function resetFormState() {
   taskIdInput.value       = '';
-  formTitle.textContent   = 'Add a Task';
-  submitBtn.textContent   = 'Add Task';
+  formTitle.textContent   = 'Ajouter une tâche';
+  submitBtn.textContent   = 'Ajouter la tâche';
   cancelBtn.style.display = 'none';
 }
 
