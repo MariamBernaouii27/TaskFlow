@@ -1,0 +1,24 @@
+{
+  "name": "taskflow",
+  "version": "1.0.0",
+  "description": "projet js",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MariamBernaouii27/TaskFlow.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/MariamBernaouii27/TaskFlow/issues"
+  },
+  "homepage": "https://github.com/MariamBernaouii27/TaskFlow#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
